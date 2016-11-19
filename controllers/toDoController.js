@@ -4,7 +4,8 @@
 module.exports = function (app) {
     // User asks for toDo page
     app.get('/toDo', function (req, res) {
-
+        // Render the toDo page ejs
+        res.render('toDo');
     });
 
     // User posts a toDo
