@@ -14,17 +14,6 @@ var toDoSchema = new mongoose.Schema({
 });
 
 var ToDo = mongoose.model('ToDo', toDoSchema);
-var itemOne = ToDo({item: 'Make mongo work'}).save(function (err) {
-    if (err) {
-        throw err;
-    }
-    else {
-        console.log("Item Saved");
-    }
-});
-
-// Data we want to send to get put in the todo list
-var data = [{item: 'Get Milk'}, {item: 'Walk Dog'}, {item: 'Code a To Do App'}];
 
 // Set up body parser
 var urlEncodedParser = bodyParser.urlencoded({extended: false});
@@ -33,21 +22,36 @@ var urlEncodedParser = bodyParser.urlencoded({extended: false});
 module.exports = function (app) {
     // User asks for toDo page
     app.get('/toDo', function (req, res) {
-        // Render the toDo page ejs
-        res.render('toDo', {toDos: data});
+        // Get data from mongodb and pass it to the view
+        // Find all items from the database
+        ToDo.find({}, function (err, data) {
+            if (err) {
+                throw err;
+            }
+            // Render the toDo page ejs
+            res.render('toDo', {toDos: data});
+        });
     });
 
     // User posts a toDo
     app.post('/toDo', urlEncodedParser, function (req, res) {
-        data.push(req.body);
-        res.json(data);
+        // Get data from the view and add it to mongodb
+        var newToDo = ToDo(req.body).save(function(err, data) {
+            if (err) {
+                throw err;
+            }
+            res.json(data);
+        });
     });
 
     // User deletes a toDo
     app.delete('/toDo/:item', function (req, res) {
-        data = data.filter(function(toDo) {
-            return toDo.item.replace(/ /g, '-') !== req.params.item;
+        // Delete requested item from mongodb
+        ToDo.find({item: req.params.item.replace(/\-/g, " ")}).remove(function (err, data) {
+            if (err) {
+                throw err;
+            }
+            res.json(data);
         });
-        res.json(data);
     });
 };
